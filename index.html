@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JOHNSON AI — YouTube Automation Agent</title>
+    <meta name="description" content="AI-powered YouTube Shorts automation agent for USA-focused faceless channels">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- API Key Modal -->
+    <div id="apiKeyModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-icon">🔑</div>
+            <h2>Welcome to JOHNSON AI</h2>
+            <p>Enter your free Google Gemini API key to get started</p>
+            <input type="password" id="apiKeyInput" placeholder="Enter your Gemini API key..." class="modal-input">
+            <button id="saveApiKey" class="btn btn-primary btn-lg">Launch Agent →</button>
+            <a href="https://aistudio.google.com/apikey" target="_blank" class="modal-link">Get your free API key here ↗</a>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="app" class="app hidden">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span class="logo-icon">⚡</span>
+                    <span class="logo-text">JOHNSON<span class="logo-ai">AI</span></span>
+                </div>
+                <p class="logo-sub">YouTube Automation Agent</p>
+            </div>
+
+            <div class="sidebar-nav">
+                <button class="nav-item active" data-module="dashboard">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-label">Dashboard</span>
+                </button>
+                <div class="nav-divider"><span>Content Pipeline</span></div>
+                <button class="nav-item" data-module="trends">
+                    <span class="nav-icon">🔍</span>
+                    <span class="nav-label">Trend Research</span>
+                    <span class="nav-phase">P1</span>
+                </button>
+                <button class="nav-item" data-module="strategy">
+                    <span class="nav-icon">🎯</span>
+                    <span class="nav-label">Content Strategy</span>
+                    <span class="nav-phase">P2</span>
+                </button>
+                <button class="nav-item" data-module="scriptwriter">
+                    <span class="nav-icon">✍️</span>
+                    <span class="nav-label">Script Writer</span>
+                    <span class="nav-phase">P3</span>
+                </button>
+                <button class="nav-item" data-module="scenes">
+                    <span class="nav-icon">🎬</span>
+                    <span class="nav-label">Visual Scenes</span>
+                    <span class="nav-phase">P4</span>
+                </button>
+                <button class="nav-item" data-module="voiceover">
+                    <span class="nav-icon">🎙️</span>
+                    <span class="nav-label">Voiceover</span>
+                    <span class="nav-phase">P5</span>
+                </button>
+                <button class="nav-item" data-module="videoplan">
+                    <span class="nav-icon">🎥</span>
+                    <span class="nav-label">Video Plan</span>
+                    <span class="nav-phase">P6-7</span>
+                </button>
+                <button class="nav-item" data-module="thumbnail">
+                    <span class="nav-icon">🖼️</span>
+                    <span class="nav-label">Thumbnails</span>
+                    <span class="nav-phase">P8</span>
+                </button>
+                <button class="nav-item" data-module="seo">
+                    <span class="nav-icon">🔎</span>
+                    <span class="nav-label">SEO Optimizer</span>
+                    <span class="nav-phase">P9</span>
+                </button>
+                <button class="nav-item" data-module="quality">
+                    <span class="nav-icon">✅</span>
+                    <span class="nav-label">Quality Control</span>
+                    <span class="nav-phase">P10</span>
+                </button>
+                <button class="nav-item" data-module="publish">
+                    <span class="nav-icon">🚀</span>
+                    <span class="nav-label">Publish</span>
+                    <span class="nav-phase">P11</span>
+                </button>
+                <div class="nav-divider"><span>Analytics</span></div>
+                <button class="nav-item" data-module="analytics">
+                    <span class="nav-icon">📈</span>
+                    <span class="nav-label">Performance</span>
+                    <span class="nav-phase">P12</span>
+                </button>
+                <button class="nav-item" data-module="improve">
+                    <span class="nav-icon">🧠</span>
+                    <span class="nav-label">Self-Improve</span>
+                    <span class="nav-phase">P13</span>
+                </button>
+            </div>
+
+            <div class="sidebar-footer">
+                <button id="settingsBtn" class="nav-item">
+                    <span class="nav-icon">⚙️</span>
+                    <span class="nav-label">Settings</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button id="sidebarToggle" class="sidebar-toggle">☰</button>
+                    <h1 id="pageTitle" class="page-title">Dashboard</h1>
+                </div>
+                <div class="topbar-right">
+                    <button id="runFullPipeline" class="btn btn-primary btn-glow">
+                        <span class="btn-icon">⚡</span> Run Full Pipeline
+                    </button>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div id="contentArea" class="content-area">
+                <!-- Dashboard Module -->
+                <section id="mod-dashboard" class="module active">
+                    <div class="dashboard-grid">
+                        <!-- Stats Row -->
+                        <div class="stats-row">
+                            <div class="stat-card">
+                                <div class="stat-icon">📹</div>
+                                <div class="stat-info">
+                                    <span class="stat-value" id="totalVideos">0</span>
+                                    <span class="stat-label">Videos Created</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">🔥</div>
+                                <div class="stat-info">
+                                    <span class="stat-value" id="totalTopics">0</span>
+                                    <span class="stat-label">Topics Researched</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">📝</div>
+                                <div class="stat-info">
+                                    <span class="stat-value" id="totalScripts">0</span>
+                                    <span class="stat-label">Scripts Written</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">⚡</div>
+                                <div class="stat-info">
+                                    <span class="stat-value" id="avgScore">—</span>
+                                    <span class="stat-label">Avg Viral Score</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pipeline Status -->
+                        <div class="card pipeline-card">
+                            <h2 class="card-title">Content Pipeline</h2>
+                            <p class="card-subtitle">Click "Run Full Pipeline" to automate all 13 phases</p>
+                            <div class="pipeline-steps" id="pipelineSteps">
+                                <div class="pipeline-step" data-step="trends"><span class="step-num">1</span><span class="step-name">Trends</span><span class="step-status">⏳</span></div>
+                                <div class="pipeline-connector"></div>
+                                <div class="pipeline-step" data-step="strategy"><span class="step-num">2</span><span class="step-name">Strategy</span><span class="step-status">⏳</span></div>
+                                <div class="pipeline-connector"></div>
+                                <div class="pipeline-step" data-step="scriptwriter"><span class="step-num">3</span><span class="step-name">Script</span><span class="step-status">⏳</span></div>
+                                <div class="pipeline-connector"></div>
+                                <div class="pipeline-step" data-step="scenes"><span class="step-num">4</span><span class="step-name">Scenes</span><span class="step-status">⏳</span></div>
+                                <div class="pipeline-connector"></div>
+                                <div class="pipeline-step" data-step="voiceover"><span class="step-num">5</span><span class="step-name">Voice</span><span class="step-status">⏳</span></div>
+                                <div class="pipeline-connector"></div>
+                                <div class="pipeline-step" data-step="videoplan"><span class="step-num">6</span><span class="step-name">Video</span><span class="step-status">⏳</span></div>
+                                <div class="pipeline-connector"></div>
+                                <div class="pipeline-step" data-step="thumbnail"><span class="step-num">7</span><span class="step-name">Thumb</span><span class="step-status">⏳</span></div>
+                                <div class="pipeline-connector"></div>
+                                <div class="pipeline-step" data-step="seo"><span class="step-num">8</span><span class="step-name">SEO</span><span class="step-status">⏳</span></div>
+                                <div class="pipeline-connector"></div>
+                                <div class="pipeline-step" data-step="quality"><span class="step-num">9</span><span class="step-name">QC</span><span class="step-status">⏳</span></div>
+                                <div class="pipeline-connector"></div>
+                                <div class="pipeline-step" data-step="publish"><span class="step-num">10</span><span class="step-name">Publish</span><span class="step-status">⏳</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Projects -->
+                        <div class="card">
+                            <h2 class="card-title">Recent Projects</h2>
+                            <div id="recentProjects" class="recent-projects">
+                                <div class="empty-state">
+                                    <span class="empty-icon">🎬</span>
+                                    <p>No projects yet. Start by running a pipeline!</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Actions -->
+                        <div class="card">
+                            <h2 class="card-title">Quick Actions</h2>
+                            <div class="quick-actions">
+                                <button class="quick-action-btn" data-action="trends">🔍 Research Trends</button>
+                                <button class="quick-action-btn" data-action="scriptwriter">✍️ Write Script</button>
+                                <button class="quick-action-btn" data-action="seo">🔎 Optimize SEO</button>
+                                <button class="quick-action-btn" data-action="thumbnail">🖼️ Create Thumbnails</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Trend Research Module -->
+                <section id="mod-trends" class="module">
+                    <div class="module-header">
+                        <div>
+                            <h2>🔍 Phase 1: Trend Research</h2>
+                            <p>Discover the hottest viral topics for USA audience</p>
+                        </div>
+                    </div>
+                    <div class="module-body">
+                        <div class="input-group">
+                            <label>Select Your Niche</label>
+                            <select id="trendNiche" class="select-input">
+                                <option value="AI Tools & Technology">AI Tools & Technology</option>
+                                <option value="AI News & Breakthroughs">AI News & Breakthroughs</option>
+                                <option value="AI Business & Startups">AI Business & Startups</option>
+                                <option value="AI Healthcare">AI Healthcare</option>
+                                <option value="AI Productivity">AI Productivity</option>
+                                <option value="AI Job Market">AI Job Market</option>
+                                <option value="Tech Reviews">Tech Reviews</option>
+                                <option value="Science & Future">Science & Future</option>
+                                <option value="Money & Finance">Money & Finance</option>
+                                <option value="Custom">Custom Niche...</option>
+                            </select>
+                            <input type="text" id="customNiche" class="text-input hidden" placeholder="Enter your custom niche...">
+                        </div>
+                        <div class="input-group">
+                            <label>Additional Context (optional)</label>
+                            <textarea id="trendContext" class="text-input" placeholder="Any specific angle, recent event, or focus area..." rows="2"></textarea>
+                        </div>
+                        <button id="runTrends" class="btn btn-primary">
+                            <span class="btn-icon">🔍</span> Discover Trends
+                        </button>
+                        <div id="trendsResult" class="result-area hidden"></div>
+                    </div>
+                </section>
+
+                <!-- Content Strategy Module -->
+                <section id="mod-strategy" class="module">
+                    <div class="module-header">
+                        <div>
+                            <h2>🎯 Phase 2: Content Strategy</h2>
+                            <p>Validate topic for USA audience engagement</p>
+                        </div>
+                    </div>
+                    <div class="module-body">
+                        <div class="input-group">
+                            <label>Selected Topic</label>
+                            <input type="text" id="strategyTopic" class="text-input" placeholder="Enter or paste the selected topic...">
+                        </div>
+                        <button id="runStrategy" class="btn btn-primary">
+                            <span class="btn-icon">🎯</span> Validate Strategy
+                        </button>
+                        <div id="strategyResult" class="result-area hidden"></div>
+                    </div>
+                </section>
+
+                <!-- Script Writer Module -->
+                <section id="mod-scriptwriter" class="module">
+                    <div class="module-header">
+                        <div>
+                            <h2>✍️ Phase 3: Script Writer</h2>
+                            <p>Generate 30-60 second YouTube Shorts script</p>
+                        </div>
+                    </div>
+                    <div class="module-body">
+                        <div class="input-group">
+                            <label>Topic</label>
+                            <input type="text" id="scriptTopic" class="text-input" placeholder="Topic for the script...">
+                        </div>
+                        <div class="input-group">
+                            <label>Angle / Key Point (optional)</label>
+                            <textarea id="scriptAngle" class="text-input" placeholder="Any specific angle or talking point..." rows="2"></textarea>
+                        </div>
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label>Duration</label>
+                                <select id="scriptDuration" class="select-input">
+                                    <option value="30 seconds">30 seconds</option>
+                                    <option value="45 seconds" selected>45 seconds</option>
+                                    <option value="60 seconds">60 seconds</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Tone</label>
+                                <select id="scriptTone" class="select-input">
+                                    <option value="Shocking & Urgent">Shocking & Urgent</option>
+                                    <option value="Educational & Clear" selected>Educational & Clear</option>
+                                    <option value="Exciting & Hype">Exciting & Hype</option>
+                                    <option value="Calm & Authoritative">Calm & Authoritative</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button id="runScript" class="btn btn-primary">
+                            <span class="btn-icon">✍️</span> Generate Script
+                        </button>
+                        <div id="scriptResult" class="result-area hidden"></div>
+                    </div>
+                </section>
+
+                <!-- Visual Scenes Module -->
+                <section id="mod-scenes" class="module">
+                    <div class="module-header">
+                        <div>
+                            <h2>🎬 Phase 4: Visual Scene Breakdown</h2>
+                            <p>AI image prompts & scene planning for each segment</p>
+                        </div>
+                    </div>
+                    <div class="module-body">
+                        <div class="input-group">
+                            <label>Script</label>
+                            <textarea id="scenesScript" class="text-input" placeholder="Paste your script here..." rows="6"></textarea>
+                        </div>
+                        <button id="runScenes" class="btn btn-primary">
+                            <span class="btn-icon">🎬</span> Generate Scenes
+                        </button>
+                        <div id="scenesResult" class="result-area hidden"></div>
+                    </div>
+                </section>
+
+                <!-- Voiceover Module -->
+                <section id="mod-voiceover" class="module">
+                    <div class="module-header">
+                        <div>
+                            <h2>🎙️ Phase 5: Voiceover Script</h2>
+                            <p>Professional voiceover with timing & energy annotations</p>
+                        </div>
+                    </div>
+                    <div class="module-body">
+                        <div class="input-group">
+                            <label>Script</label>
+                            <textarea id="voiceScript" class="text-input" placeholder="Paste your script here..." rows="6"></textarea>
+                        </div>
+                        <button id="runVoiceover" class="btn btn-primary">
+                            <span class="btn-icon">🎙️</span> Generate Voiceover Guide
+                        </button>
+                        <div id="voiceoverResult" class="result-area hidden"></div>
+                    </div>
+                </section>
+
+                <!-- Video Plan Module -->
+                <section id="mod-videoplan" class="module">
+                    <div class="module-header">
+                        <div>
+                            <h2>🎥 Phase 6-7: Video & Editing Plan</h2>
+                            <p>Complete editing blueprint with effects, transitions, music</p>
+                        </div>
+                    </div>
+                    <div class="module-body">
+                        <div class="input-group">
+                            <label>Script</label>
+                            <textarea id="videoScript" class="text-input" placeholder="Paste your script here..." rows="4"></textarea>
+                        </div>
+                        <div class="input-group">
+                            <label>Scene Breakdown (optional)</label>
+                            <textarea id="videoScenes" class="text-input" placeholder="Paste scene breakdown if available..." rows="4"></textarea>
+                        </div>
+                        <button id="runVideoplan" class="btn btn-primary">
+                            <span class="btn-icon">🎥</span> Generate Video Plan
+                        </button>
+                        <div id="videoplanResult" class="result-area hidden"></div>
+                    </div>
+                </section>
+
+                <!-- Thumbnail Module -->
+                <section id="mod-thumbnail" class="module">
+                    <div class="module-header">
+                        <div>
+                            <h2>🖼️ Phase 8: Thumbnail Concepts</h2>
+                            <p>5 high-CTR thumbnail concepts with AI prompts</p>
+                        </div>
+                    </div>
+                    <div class="module-body">
+                        <div class="input-group">
+                            <label>Video Topic</label>
+                            <input type="text" id="thumbTopic" class="text-input" placeholder="What is the video about?">
+                        </div>
+                        <div class="input-group">
+                            <label>Key Visual Element (optional)</label>
+                            <input type="text" id="thumbVisual" class="text-input" placeholder="e.g., robot, brain, smartphone...">
+                        </div>
+                        <button id="runThumbnail" class="btn btn-primary">
+                            <span class="btn-icon">🖼️</span> Generate Thumbnails
+                        </button>
+                        <div id="thumbnailResult" class="result-area hidden"></div>
+                    </div>
+                </section>
+
+                <!-- SEO Module -->
+                <section id="mod-seo" class="module">
+                    <div class="module-header">
+                        <div>
+                            <h2>🔎 Phase 9: SEO Optimizer</h2>
+                            <p>Titles, tags, hashtags & description for maximum reach</p>
+                        </div>
+                    </div>
+                    <div class="module-body">
+                        <div class="input-group">
+                            <label>Video Topic</label>
+                            <input type="text" id="seoTopic" class="text-input" placeholder="What is the video about?">
+                        </div>
+                        <div class="input-group">
+                            <label>Script Summary (optional)</label>
+                            <textarea id="seoScript" class="text-input" placeholder="Brief summary or paste the script..." rows="3"></textarea>
+                        </div>
+                        <button id="runSeo" class="btn btn-primary">
+                            <span class="btn-icon">🔎</span> Optimize SEO
+                        </button>
+                        <div id="seoResult" class="result-area hidden"></div>
+                    </div>
+                </section>
+
+                <!-- Quality Control Module -->
+                <section id="mod-quality" class="module">
+                    <div class="module-header">
+                        <div>
+                            <h2>✅ Phase 10: Quality Control</h2>
+                            <p>Fact-check, copyright, compliance & grammar review</p>
+                        </div>
+                    </div>
+                    <div class="module-body">
+                        <div class="input-group">
+                            <label>Full Script</label>
+                            <textarea id="qualityScript" class="text-input" placeholder="Paste the complete script..." rows="6"></textarea>
+                        </div>
+                        <div class="input-group">
+                            <label>Title & Description</label>
+                            <textarea id="qualityMeta" class="text-input" placeholder="Paste the title and description..." rows="3"></textarea>
+                        </div>
+                        <button id="runQuality" class="btn btn-primary">
+                            <span class="btn-icon">✅</span> Run Quality Check
+                        </button>
+                        <div id="qualityResult" class="result-area hidden"></div>
+                    </div>
+                </section>
+
+                <!-- Publish Module -->
+                <section id="mod-publish" class="module">
+                    <div class="module-header">
+                        <div>
+                            <h2>🚀 Phase 11: Publish Guide</h2>
+                            <p>Upload settings, scheduling & YouTube Studio guide</p>
+                        </div>
+                    </div>
+                    <div class="module-body">
+                        <div class="input-group">
+                            <label>Video Topic</label>
+                            <input type="text" id="publishTopic" class="text-input" placeholder="Video topic...">
+                        </div>
+                        <button id="runPublish" class="btn btn-primary">
+                            <span class="btn-icon">🚀</span> Generate Upload Guide
+                        </button>
+                        <div id="publishResult" class="result-area hidden"></div>
+                    </div>
+                </section>
+
+                <!-- Analytics Module -->
+                <section id="mod-analytics" class="module">
+                    <div class="module-header">
+                        <div>
+                            <h2>📈 Phase 12: Performance Analytics</h2>
+                            <p>Track & analyze your video performance</p>
+                        </div>
+                    </div>
+                    <div class="module-body">
+                        <div class="card">
+                            <h3 class="card-title">Add Video Performance</h3>
+                            <div class="input-row">
+                                <div class="input-group">
+                                    <label>Video Title</label>
+                                    <input type="text" id="analyticsTitle" class="text-input" placeholder="Video title...">
+                                </div>
+                                <div class="input-group">
+                                    <label>Upload Date</label>
+                                    <input type="date" id="analyticsDate" class="text-input">
+                                </div>
+                            </div>
+                            <div class="input-row">
+                                <div class="input-group"><label>Views</label><input type="number" id="analyticsViews" class="text-input" placeholder="0"></div>
+                                <div class="input-group"><label>CTR %</label><input type="number" id="analyticsCTR" class="text-input" placeholder="0" step="0.1"></div>
+                                <div class="input-group"><label>Retention %</label><input type="number" id="analyticsRetention" class="text-input" placeholder="0" step="0.1"></div>
+                            </div>
+                            <div class="input-row">
+                                <div class="input-group"><label>Likes</label><input type="number" id="analyticsLikes" class="text-input" placeholder="0"></div>
+                                <div class="input-group"><label>Comments</label><input type="number" id="analyticsComments" class="text-input" placeholder="0"></div>
+                                <div class="input-group"><label>Shares</label><input type="number" id="analyticsShares" class="text-input" placeholder="0"></div>
+                            </div>
+                            <button id="saveAnalytics" class="btn btn-primary">
+                                <span class="btn-icon">💾</span> Save Performance Data
+                            </button>
+                        </div>
+                        <div id="analyticsChart" class="chart-area"></div>
+                        <div id="analyticsHistory" class="result-area"></div>
+                    </div>
+                </section>
+
+                <!-- Self-Improvement Module -->
+                <section id="mod-improve" class="module">
+                    <div class="module-header">
+                        <div>
+                            <h2>🧠 Phase 13: Self-Improvement</h2>
+                            <p>AI-powered learning from your performance data</p>
+                        </div>
+                    </div>
+                    <div class="module-body">
+                        <button id="runImprove" class="btn btn-primary">
+                            <span class="btn-icon">🧠</span> Analyze & Learn
+                        </button>
+                        <div id="improveResult" class="result-area hidden"></div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p id="loadingText">Processing...</p>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-icon">⚙️</div>
+            <h2>Settings</h2>
+            <div class="input-group">
+                <label>Gemini API Key</label>
+                <input type="password" id="settingsApiKey" class="modal-input" placeholder="Your API key...">
+            </div>
+            <div class="input-group">
+                <label>Default Niche</label>
+                <input type="text" id="settingsNiche" class="modal-input" placeholder="e.g., AI Tools & Technology">
+            </div>
+            <div class="modal-actions">
+                <button id="saveSettings" class="btn btn-primary">Save Settings</button>
+                <button id="closeSettings" class="btn btn-secondary">Cancel</button>
+            </div>
+            <button id="exportData" class="btn btn-secondary" style="margin-top:12px;width:100%">📥 Export All Data</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/utils/helpers.js"></script>
+    <script src="js/utils/storage.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/modules/dashboard.js"></script>
+    <script src="js/modules/trends.js"></script>
+    <script src="js/modules/strategy.js"></script>
+    <script src="js/modules/scriptwriter.js"></script>
+    <script src="js/modules/scenes.js"></script>
+    <script src="js/modules/voiceover.js"></script>
+    <script src="js/modules/videoplan.js"></script>
+    <script src="js/modules/thumbnail.js"></script>
+    <script src="js/modules/seo.js"></script>
+    <script src="js/modules/quality.js"></script>
+    <script src="js/modules/publish.js"></script>
+    <script src="js/modules/analytics.js"></script>
+    <script src="js/modules/improve.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

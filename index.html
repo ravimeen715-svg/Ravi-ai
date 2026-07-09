@@ -6,9 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JOHNSON AI — YouTube Automation Agent</title>
     <meta name="description" content="AI-powered YouTube Shorts automation agent for USA-focused faceless channels">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" <link
+        rel="stylesheet" href="css/styles.css">
+    <style>
+        @media (max-width: 600px) {
+            .hide-mobile {
+                display: none !important;
+            }
+        }
+    </style>
     <!-- PWA Setup -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1a1a2e">
@@ -113,10 +119,8 @@
             </div>
 
             <div class="sidebar-footer">
-                <button id="settingsBtn" class="nav-item">
-                    <span class="nav-icon">⚙️</span>
-                    <span class="nav-label">Settings</span>
-                </button>
+                <div class="nav-divider"><span>App Info</span></div>
+                <div style="padding: 10px 14px; font-size: 11px; color: #5a5a72;">JOHNSON AI v2.1</div>
             </div>
         </nav>
 
@@ -128,9 +132,14 @@
                     <button id="sidebarToggle" class="sidebar-toggle">☰</button>
                     <h1 id="pageTitle" class="page-title">Dashboard</h1>
                 </div>
-                <div class="topbar-right">
-                    <button id="runFullPipeline" class="btn btn-primary btn-glow">
-                        <span class="btn-icon">⚡</span> Run Full Pipeline
+                <div class="topbar-right" style="display: flex; gap: 8px;">
+                    <button id="settingsBtn" class="btn btn-secondary btn-sm"
+                        style="padding: 8px 12px; border-radius: 8px;">
+                        <span class="btn-icon">⚙️</span> <span class="hide-mobile">Settings</span>
+                    </button>
+                    <button id="runFullPipeline" class="btn btn-primary btn-glow btn-sm"
+                        style="padding: 8px 12px; border-radius: 8px;">
+                        <span class="btn-icon">⚡</span> <span class="hide-mobile">Run Full Pipeline</span>
                     </button>
                 </div>
             </header>

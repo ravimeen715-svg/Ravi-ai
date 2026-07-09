@@ -608,7 +608,7 @@
     <!-- Force correct model — reads working model from test.html or uses gemini-3.5-flash -->
     <script>
         (function () {
-            var model = localStorage.getItem('johnson_ai_working_model') || 'gemini-3.5-flash';
+            var model = localStorage.getItem('johnson_ai_working_model') || 'gemini-1.5-flash';
             GeminiAPI.baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent';
             console.log('JOHNSON AI: Using model:', model);
         })();

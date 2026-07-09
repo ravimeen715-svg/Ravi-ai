@@ -3,7 +3,7 @@
 // ==========================================
 
 const GeminiAPI = {
-    baseUrl: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+    baseUrl: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent',
 
     async call(prompt, loadingText = 'Generating...') {
         const apiKey = Storage.getApiKey();
@@ -12,55 +12,76 @@ const GeminiAPI = {
             throw new Error('No API key');
         }
 
-        App.showLoading(loadingText);
+        let maxRetries = 4;
+        let attempt = 0;
 
-        try {
-            const response = await fetch(`${this.baseUrl}?key=${apiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{
-                        parts: [{ text: prompt }]
-                    }],
-                    generationConfig: {
-                        temperature: 0.9,
-                        topP: 0.95,
-                        topK: 40,
-                        maxOutputTokens: 8192,
-                    },
-                    safetySettings: [
-                        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-                        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-                        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-                        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-                    ]
-                })
-            });
+        while (attempt < maxRetries) {
+            attempt++;
+            App.showLoading(attempt > 1 ? `Google API limit hit. Auto-retrying in a few seconds... (Attempt ${attempt}/${maxRetries}) ⏳` : loadingText);
 
-            if (!response.ok) {
-                const err = await response.json().catch(() => ({}));
-                if (response.status === 429) {
-                    throw new Error('Rate limit reached. Please wait a moment and try again.');
+            try {
+                // Ensure model URL dynamically uses what's injected in index.html, else fallback
+                const modelUrl = window.GeminiAPI?.baseUrl || this.baseUrl;
+                const response = await fetch(`${modelUrl}?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }],
+                        generationConfig: { temperature: 0.9, topP: 0.95, topK: 40, maxOutputTokens: 8192 },
+                        safetySettings: [
+                            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+                        ]
+                    })
+                });
+
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    if (response.status === 429 || response.status === 503) {
+                        if (attempt < maxRetries) {
+                            console.warn(`[JOHNSON AI] Rate limit (429) hit on attempt ${attempt}. Waiting 15 seconds...`);
+                            await new Promise(r => setTimeout(r, 15000)); // wait 15 seconds before retry
+                            continue; // Retry loop
+                        }
+                        throw new Error('Google API quota exhausted. Try again after 30 minutes.');
+                    }
+                    if (response.status === 400) {
+                        throw new Error('Invalid API key. Check settings or ensure your key supports this model.');
+                    }
+                    throw new Error(err.error?.message || `API error: ${response.status}`);
                 }
-                if (response.status === 400) {
-                    throw new Error('Invalid API key. Please check your key in Settings.');
+
+                const data = await response.json();
+                const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (!text) {
+                    throw new Error('No response received from AI. Try again.');
                 }
-                throw new Error(err.error?.message || `API error: ${response.status}`);
+
+                App.hideLoading();
+                return text;
+
+            } catch (error) {
+                // If the error is our thrown quota error, break out
+                if (error.message.includes('quota exhausted') || error.message.includes('Invalid API key')) {
+                    App.hideLoading();
+                    App.showToast(error.message, 'error');
+                    throw error;
+                }
+
+                // For fetch errors (like network drop), retry as well
+                if (attempt < maxRetries) {
+                    console.warn(`[JOHNSON AI] Network issue on attempt ${attempt}: ${error.message}. Waiting 10s...`);
+                    await new Promise(r => setTimeout(r, 10000));
+                    continue;
+                }
+
+                App.hideLoading();
+                App.showToast(error.message, 'error');
+                throw error;
             }
-
-            const data = await response.json();
-            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-            if (!text) {
-                throw new Error('No response received from AI. Try again.');
-            }
-
-            return text;
-        } catch (error) {
-            App.showToast(error.message, 'error');
-            throw error;
-        } finally {
-            App.hideLoading();
         }
     },
 

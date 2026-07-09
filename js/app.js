@@ -163,7 +163,11 @@ const App = {
         const niche = settings.defaultNiche || 'AI Tools & Technology';
 
         this.pipelineRunning = true;
-        this.currentProject = { id: Helpers.generateId(), topic: niche };
+
+        // Resume logic: Use existing project if it exists, otherwise create new
+        if (!this.currentProject.id) {
+            this.currentProject = { id: Helpers.generateId(), topic: niche };
+        }
 
         const steps = document.querySelectorAll('.pipeline-step');
         const connectors = document.querySelectorAll('.pipeline-connector');
@@ -176,102 +180,146 @@ const App = {
         connectors.forEach(c => c.classList.remove('active'));
 
         try {
-            // PHASE 1: Trends
-            this.updatePipelineStep(0, 'active', '🔄');
-            this.switchModule('trends');
-            document.getElementById('trendNiche').value = niche;
-            const trends = await TrendsModule.run(niche);
-            if (!trends) throw new Error('Trend research failed');
-            this.updatePipelineStep(0, 'completed', '✅');
+            let selectedTopic = this.currentProject.topic || niche;
+            let script = this.currentProject.script || '';
+            let scenes = this.currentProject.scenes || '';
+            let seo = this.currentProject.seo || '';
 
-            // Extract top topic from trends (use first bold line or niche)
-            const topicMatch = trends.match(/\*\*#1 RECOMMENDED.*?\*\*[:\s]*(.+?)(?:\n|$)/i)
-                || trends.match(/\*\*1\.\s*(.+?)\*\*/);
-            const selectedTopic = topicMatch ? topicMatch[1].replace(/\*\*/g, '').trim() : niche;
+            // PHASE 1: Trends
+            if (!this.currentProject.trendResults) {
+                this.updatePipelineStep(0, 'active', '🔄');
+                this.switchModule('trends');
+                document.getElementById('trendNiche').value = niche;
+                const trends = await TrendsModule.run(niche);
+                if (!trends) throw new Error('Trend research failed');
+                this.updatePipelineStep(0, 'completed', '✅');
+
+                const topicMatch = trends.match(/\*\*#1 RECOMMENDED.*?\*\*[:\s]*(.+?)(?:\n|$)/i) || trends.match(/\*\*1\.\s*(.+?)\*\*/);
+                selectedTopic = topicMatch ? topicMatch[1].replace(/\*\*/g, '').trim() : niche;
+                this.currentProject.topic = selectedTopic;
+            } else {
+                this.updatePipelineStep(0, 'completed', '✅');
+            }
 
             // PHASE 2: Strategy
-            await this.delay(1500);
-            this.updatePipelineStep(1, 'active', '🔄');
-            this.switchModule('strategy');
-            document.getElementById('strategyTopic').value = selectedTopic;
-            const strategy = await StrategyModule.run(selectedTopic);
-            if (!strategy) throw new Error('Strategy validation failed');
-            this.updatePipelineStep(1, 'completed', '✅');
+            if (!this.currentProject.strategyResult) {
+                await this.delay(6000); // Increased delay to avoid API rate limits (HTTP 429)
+                this.updatePipelineStep(1, 'active', '🔄');
+                this.switchModule('strategy');
+                document.getElementById('strategyTopic').value = selectedTopic;
+                const strategy = await StrategyModule.run(selectedTopic);
+                if (!strategy) throw new Error('Strategy validation failed');
+                this.updatePipelineStep(1, 'completed', '✅');
+            } else {
+                this.updatePipelineStep(1, 'completed', '✅');
+            }
 
             // PHASE 3: Script
-            await this.delay(1500);
-            this.updatePipelineStep(2, 'active', '🔄');
-            this.switchModule('scriptwriter');
-            document.getElementById('scriptTopic').value = selectedTopic;
-            const script = await ScriptwriterModule.run(selectedTopic);
-            if (!script) throw new Error('Script generation failed');
-            this.updatePipelineStep(2, 'completed', '✅');
+            if (!script) {
+                await this.delay(6000); // Increased delay to avoid API rate limits (HTTP 429)
+                this.updatePipelineStep(2, 'active', '🔄');
+                this.switchModule('scriptwriter');
+                document.getElementById('scriptTopic').value = selectedTopic;
+                script = await ScriptwriterModule.run(selectedTopic);
+                if (!script) throw new Error('Script generation failed');
+                this.updatePipelineStep(2, 'completed', '✅');
+            } else {
+                this.updatePipelineStep(2, 'completed', '✅');
+            }
 
             // PHASE 4: Scenes
-            await this.delay(1500);
-            this.updatePipelineStep(3, 'active', '🔄');
-            this.switchModule('scenes');
-            document.getElementById('scenesScript').value = script;
-            const scenes = await ScenesModule.run(script);
-            if (!scenes) throw new Error('Scene breakdown failed');
-            this.updatePipelineStep(3, 'completed', '✅');
+            if (!scenes) {
+                await this.delay(6000); // Increased delay to avoid API rate limits (HTTP 429)
+                this.updatePipelineStep(3, 'active', '🔄');
+                this.switchModule('scenes');
+                document.getElementById('scenesScript').value = script;
+                scenes = await ScenesModule.run(script);
+                if (!scenes) throw new Error('Scene breakdown failed');
+                this.updatePipelineStep(3, 'completed', '✅');
+            } else {
+                this.updatePipelineStep(3, 'completed', '✅');
+            }
 
             // PHASE 5: Voiceover
-            await this.delay(1500);
-            this.updatePipelineStep(4, 'active', '🔄');
-            this.switchModule('voiceover');
-            document.getElementById('voiceScript').value = script;
-            const voice = await VoiceoverModule.run(script);
-            if (!voice) throw new Error('Voiceover generation failed');
-            this.updatePipelineStep(4, 'completed', '✅');
+            if (!this.currentProject.voiceover) {
+                await this.delay(6000); // Increased delay to avoid API rate limits (HTTP 429)
+                this.updatePipelineStep(4, 'active', '🔄');
+                this.switchModule('voiceover');
+                document.getElementById('voiceScript').value = script;
+                const voice = await VoiceoverModule.run(script);
+                if (!voice) throw new Error('Voiceover generation failed');
+                this.updatePipelineStep(4, 'completed', '✅');
+            } else {
+                this.updatePipelineStep(4, 'completed', '✅');
+            }
 
             // PHASE 6-7: Video Plan
-            await this.delay(1500);
-            this.updatePipelineStep(5, 'active', '🔄');
-            this.switchModule('videoplan');
-            document.getElementById('videoScript').value = script;
-            document.getElementById('videoScenes').value = scenes;
-            const videoplan = await VideoplanModule.run(script, scenes);
-            if (!videoplan) throw new Error('Video plan generation failed');
-            this.updatePipelineStep(5, 'completed', '✅');
+            if (!this.currentProject.videoplan) {
+                await this.delay(6000); // Increased delay to avoid API rate limits (HTTP 429)
+                this.updatePipelineStep(5, 'active', '🔄');
+                this.switchModule('videoplan');
+                document.getElementById('videoScript').value = script;
+                document.getElementById('videoScenes').value = scenes;
+                const videoplan = await VideoplanModule.run(script, scenes);
+                if (!videoplan) throw new Error('Video plan generation failed');
+                this.updatePipelineStep(5, 'completed', '✅');
+            } else {
+                this.updatePipelineStep(5, 'completed', '✅');
+            }
 
             // PHASE 8: Thumbnails
-            await this.delay(1500);
-            this.updatePipelineStep(6, 'active', '🔄');
-            this.switchModule('thumbnail');
-            document.getElementById('thumbTopic').value = selectedTopic;
-            const thumbs = await ThumbnailModule.run(selectedTopic);
-            if (!thumbs) throw new Error('Thumbnail generation failed');
-            this.updatePipelineStep(6, 'completed', '✅');
+            if (!this.currentProject.thumbnails) {
+                await this.delay(6000); // Increased delay to avoid API rate limits (HTTP 429)
+                this.updatePipelineStep(6, 'active', '🔄');
+                this.switchModule('thumbnail');
+                document.getElementById('thumbTopic').value = selectedTopic;
+                const thumbs = await ThumbnailModule.run(selectedTopic);
+                if (!thumbs) throw new Error('Thumbnail generation failed');
+                this.updatePipelineStep(6, 'completed', '✅');
+            } else {
+                this.updatePipelineStep(6, 'completed', '✅');
+            }
 
             // PHASE 9: SEO
-            await this.delay(1500);
-            this.updatePipelineStep(7, 'active', '🔄');
-            this.switchModule('seo');
-            document.getElementById('seoTopic').value = selectedTopic;
-            document.getElementById('seoScript').value = script;
-            const seo = await SeoModule.run(selectedTopic);
-            if (!seo) throw new Error('SEO optimization failed');
-            this.updatePipelineStep(7, 'completed', '✅');
+            if (!seo) {
+                await this.delay(6000); // Increased delay to avoid API rate limits (HTTP 429)
+                this.updatePipelineStep(7, 'active', '🔄');
+                this.switchModule('seo');
+                document.getElementById('seoTopic').value = selectedTopic;
+                document.getElementById('seoScript').value = script;
+                seo = await SeoModule.run(selectedTopic);
+                if (!seo) throw new Error('SEO optimization failed');
+                this.updatePipelineStep(7, 'completed', '✅');
+            } else {
+                this.updatePipelineStep(7, 'completed', '✅');
+            }
 
             // PHASE 10: Quality
-            await this.delay(1500);
-            this.updatePipelineStep(8, 'active', '🔄');
-            this.switchModule('quality');
-            document.getElementById('qualityScript').value = script;
-            document.getElementById('qualityMeta').value = seo;
-            const quality = await QualityModule.run(script, seo);
-            if (!quality) throw new Error('Quality check failed');
-            this.updatePipelineStep(8, 'completed', '✅');
+            if (!this.currentProject.qualityCheck) {
+                await this.delay(6000); // Increased delay to avoid API rate limits (HTTP 429)
+                this.updatePipelineStep(8, 'active', '🔄');
+                this.switchModule('quality');
+                document.getElementById('qualityScript').value = script;
+                document.getElementById('qualityMeta').value = seo;
+                const quality = await QualityModule.run(script, seo);
+                if (!quality) throw new Error('Quality check failed');
+                this.updatePipelineStep(8, 'completed', '✅');
+            } else {
+                this.updatePipelineStep(8, 'completed', '✅');
+            }
 
             // PHASE 11: Publish
-            await this.delay(1500);
-            this.updatePipelineStep(9, 'active', '🔄');
-            this.switchModule('publish');
-            document.getElementById('publishTopic').value = selectedTopic;
-            const publish = await PublishModule.run(selectedTopic);
-            if (!publish) throw new Error('Publish guide failed');
-            this.updatePipelineStep(9, 'completed', '✅');
+            if (!this.currentProject.publishGuide) {
+                await this.delay(6000); // Increased delay to avoid API rate limits (HTTP 429)
+                this.updatePipelineStep(9, 'active', '🔄');
+                this.switchModule('publish');
+                document.getElementById('publishTopic').value = selectedTopic;
+                const publish = await PublishModule.run(selectedTopic);
+                if (!publish) throw new Error('Publish guide failed');
+                this.updatePipelineStep(9, 'completed', '✅');
+            } else {
+                this.updatePipelineStep(9, 'completed', '✅');
+            }
 
             // Save final project
             this.currentProject.topic = selectedTopic;

@@ -379,7 +379,9 @@ const App = {
             });
         }
 
-        this.showToast(`Loaded project: ${project.topic || 'Untitled'}`, 'info');
+        // Fix: Visually switch user to the Trends/Dashboard screen to confirm load
+        this.switchModule('trends');
+        this.showToast(`Loaded project: ${project.topic || 'Untitled'}`, 'success');
     },
 
     // ==========================================

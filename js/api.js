@@ -52,11 +52,20 @@ const GeminiAPI = {
 
                     if (response.status === 429 || response.status === 503) {
                         if (attempt < maxRetries) {
-                            console.warn(`[JOHNSON AI] Rate limit (429) hit on attempt ${attempt}. Waiting 15 seconds...`);
-                            await new Promise(r => setTimeout(r, 15000));
+                            console.warn(`[JOHNSON AI] Rate limit (429) hit on attempt ${attempt}. Waiting 5 seconds...`);
+                            await new Promise(r => setTimeout(r, 5000));
+                            // Shift to gemini-pro on second attempt if 1.5-flash is hitting specific limits
+                            if (attempt === 2) {
+                                GeminiAPI.baseUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent`;
+                            }
                             continue;
                         }
-                        throw new Error('Google API quota exhausted. Try again later.');
+
+                        // User Requirement: Switch Fallback Mode -> Continue Workflow (Do not throw error!)
+                        console.warn(`[JOHNSON AI - FALLBACK MODE] Google API quota completely exhausted. Engaging Emergency Fallback Data...`);
+                        App.showToast('Quota limits reached. Using cached fallback data to continue workflow!', 'info');
+                        App.hideLoading();
+                        return GeminiAPI.getEmergencyFallbackPayload(prompt);
                     }
                     if (response.status === 400) {
                         throw new Error(`Bad Request/Invalid Key. Message: ${errMsg}`);
@@ -75,25 +84,29 @@ const GeminiAPI = {
                 return text;
 
             } catch (error) {
-                // If the error is our thrown quota error, break out
-                if (error.message.includes('quota exhausted') || error.message.includes('Invalid API key')) {
+                // Return fallback instead of throwing error if max retries hit
+                if (attempt >= maxRetries) {
+                    console.error('[JOHNSON AI] Max retries exhausted, switching to fallback mode.', error);
                     App.hideLoading();
-                    App.showToast(error.message, 'error');
-                    throw error;
+                    App.showToast('Using backup templates for workflow continuation.', 'info');
+                    return GeminiAPI.getEmergencyFallbackPayload(prompt);
                 }
 
-                // For fetch errors (like network drop), retry as well
-                if (attempt < maxRetries) {
-                    console.warn(`[JOHNSON AI] Network issue on attempt ${attempt}: ${error.message}. Waiting 10s...`);
-                    await new Promise(r => setTimeout(r, 10000));
-                    continue;
-                }
-
-                App.hideLoading();
-                App.showToast(error.message, 'error');
-                throw error;
+                await new Promise(r => setTimeout(r, 5000));
             }
         }
+
+        return GeminiAPI.getEmergencyFallbackPayload(prompt);
+    },
+
+    getEmergencyFallbackPayload(prompt) {
+        if (prompt.includes('Discover the hottest viral topics')) return `🔥 Fallback Flow - Core Tech Trends:\n1. Open Source AI Shift\n2. Spatial Computing (Apple Vision)\n3. Hardware Automation\nProceed to strategy.`;
+        if (prompt.includes('strategy')) return `Fallback Strategy:\nTarget: General Tech.\nFormat: High-pace educational.\nHook: "This changes everything."\nCore: Rapid value drop.\nCTA: Subscribe.`;
+        if (prompt.includes('Script Writer')) return `[FAST PACED 45s SCRIPT]\nHook: Tech just shifted again.\nBody: In the next 30 days, we'll see massive disruption.\nOutro: Subscribe to stay ahead.`;
+        if (prompt.includes('Thumbnail Concepts')) return `1. Concept: Shocked Face + AI Robot\n2. Concept: Split screen (Before/After) + Big text "2026 Shift"`;
+        if (prompt.includes('SEO Optimizer')) return `TITLE: The Next Big Tech Shift 😱\nDESCRIPTION: #shorts #tech Quick update.\nTAGS: tech, ai, shorts`;
+        if (prompt.includes('Publish Guide')) return `Upload Strategy: Publish between 3PM-6PM EST. Format: YouTube Shorts.`;
+        return `[FALLBACK] Content generated offline to unblock your workflow.`;
     },
 
     // Prompt templates for each phase

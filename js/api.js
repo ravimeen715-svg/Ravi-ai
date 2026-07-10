@@ -44,11 +44,9 @@ const GeminiAPI = {
                     // Root Cause Resolution: Deterministic 404 handling
                     if (response.status === 404 && errMsg.includes('is not found')) {
                         console.warn(`[JOHNSON AI - AUTO-RECOVERY] Model ${modelUrl} rejected. Falling back to legacy 'gemini-pro'`);
-                        // Set fallback globally
                         const fallbackModel = 'gemini-pro';
-                        window.GeminiAPI.baseUrl = `https://generativelanguage.googleapis.com/v1beta/models/${fallbackModel}:generateContent`;
+                        GeminiAPI.baseUrl = `https://generativelanguage.googleapis.com/v1beta/models/${fallbackModel}:generateContent`;
                         localStorage.setItem('johnson_ai_working_model', fallbackModel);
-                        // Retry immediately with the correct endpoint
                         continue;
                     }
 

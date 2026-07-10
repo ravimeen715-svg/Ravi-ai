@@ -371,20 +371,45 @@
                 <section id="mod-voiceover" class="module">
                     <div class="module-header">
                         <div>
-                            <h2>🎙️ Phase 5: Voiceover Script</h2>
-                            <p>Professional voiceover with timing & energy annotations</p>
+                            <h2>🎙️ Phase 5: Voice Generation</h2>
+                            <p>Generate professional AI voiceover (MP3)</p>
                         </div>
                     </div>
                     <div class="module-body">
                         <div class="input-group">
-                            <label>Script</label>
+                            <label>Script (For Audio)</label>
                             <textarea id="voiceScript" class="text-input" placeholder="Paste your script here..."
                                 rows="6"></textarea>
                         </div>
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label>TTS Provider</label>
+                                <select id="voiceProvider" class="select-input">
+                                    <option value="google" selected>Google / Edge TTS (Free)</option>
+                                    <option value="elevenlabs">ElevenLabs</option>
+                                    <option value="openai">OpenAI</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Voice / Tone Preset</label>
+                                <input type="text" id="voicePreset" class="text-input" value="en-US-ChristopherNeural"
+                                    placeholder="Voice ID or Name">
+                            </div>
+                            <div class="input-group">
+                                <label>Speed Control</label>
+                                <input type="number" id="voiceSpeed" class="text-input" value="1.0" step="0.1">
+                            </div>
+                        </div>
                         <button id="runVoiceover" class="btn btn-primary">
-                            <span class="btn-icon">🎙️</span> Generate Voiceover Guide
+                            <span class="btn-icon">🎙️</span> Generate voice.mp3 (Backend)
                         </button>
-                        <div id="voiceoverResult" class="result-area hidden"></div>
+                        <div id="voiceoverResult" class="result-area hidden">
+                            <h3>Generated Audio:</h3>
+                            <audio id="voiceoverAudio" controls style="width:100%; margin-top:10px;"></audio>
+                            <br><a id="voiceoverDownload" href="#" download="voice.mp3"
+                                style="color: #6c5ce7; font-size:14px; margin-top:10px; display:inline-block;">⬇️
+                                Download voice.mp3</a>
+                        </div>
                     </div>
                 </section>
 
@@ -392,25 +417,27 @@
                 <section id="mod-videoplan" class="module">
                     <div class="module-header">
                         <div>
-                            <h2>🎥 Phase 6-7: Video & Editing Plan</h2>
-                            <p>Complete editing blueprint with effects, transitions, music</p>
+                            <h2>🎥 Phase 6-7: Video Editing</h2>
+                            <p>Render real video (MP4) with Scenes + Audio</p>
                         </div>
                     </div>
                     <div class="module-body">
                         <div class="input-group">
-                            <label>Script</label>
-                            <textarea id="videoScript" class="text-input" placeholder="Paste your script here..."
+                            <label>Script Data (JSON Format Output from Scenes)</label>
+                            <textarea id="videoScript" class="text-input" placeholder="Paste JSON scene data..."
                                 rows="4"></textarea>
                         </div>
-                        <div class="input-group">
-                            <label>Scene Breakdown (optional)</label>
-                            <textarea id="videoScenes" class="text-input"
-                                placeholder="Paste scene breakdown if available..." rows="4"></textarea>
-                        </div>
                         <button id="runVideoplan" class="btn btn-primary">
-                            <span class="btn-icon">🎥</span> Generate Video Plan
+                            <span class="btn-icon">🎥</span> Render final_video.mp4 (Backend)
                         </button>
-                        <div id="videoplanResult" class="result-area hidden"></div>
+                        <div id="videoplanResult" class="result-area hidden">
+                            <h3>Generated Final Video:</h3>
+                            <video id="finalVideoPlayer" controls
+                                style="width:100%; max-width:400px; margin: 10px auto; border-radius: 8px; border: 1px solid #333;"></video>
+                            <br><a id="videoDownload" href="#" download="final_video.mp4"
+                                style="color: #6c5ce7; font-size:14px; margin-top:10px; display:inline-block;">⬇️
+                                Download final_video.mp4</a>
+                        </div>
                     </div>
                 </section>
 
@@ -495,17 +522,39 @@
                 <section id="mod-publish" class="module">
                     <div class="module-header">
                         <div>
-                            <h2>🚀 Phase 11: Publish Guide</h2>
-                            <p>Upload settings, scheduling & YouTube Studio guide</p>
+                            <h2>🚀 Phase 11: YouTube Upload</h2>
+                            <p>Upload video to YouTube via API with Human Approval</p>
                         </div>
                     </div>
                     <div class="module-body">
-                        <div class="input-group">
-                            <label>Video Topic</label>
-                            <input type="text" id="publishTopic" class="text-input" placeholder="Video topic...">
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label>Video Title</label>
+                                <input type="text" id="publishTopic" class="text-input" placeholder="Video title...">
+                            </div>
+                            <div class="input-group">
+                                <label>Tags (Comma separated)</label>
+                                <input type="text" id="publishTags" class="text-input" value="shorts, ai, tech">
+                            </div>
                         </div>
-                        <button id="runPublish" class="btn btn-primary">
-                            <span class="btn-icon">🚀</span> Generate Upload Guide
+                        <div class="input-group">
+                            <label>Video Description</label>
+                            <textarea id="publishDescription" class="text-input"
+                                rows="4">#shorts generated via AI</textarea>
+                        </div>
+
+                        <div class="input-group"
+                            style="background:#2a2a3e; padding:15px; border-radius:8px; border:1px solid #444;">
+                            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                                <input type="checkbox" id="humanApprovalCheck" style="width:20px; height:20px;">
+                                <span style="font-size:14px; color:#fff;">I approve this video for YouTube upload
+                                    (Required)</span>
+                            </label>
+                        </div>
+
+                        <button id="runPublish" class="btn btn-primary btn-glow"
+                            style="background:#ff0000; box-shadow:0 0 20px rgba(255,0,0,0.4);">
+                            <span class="btn-icon">▶️</span> Upload to YouTube
                         </button>
                         <div id="publishResult" class="result-area hidden"></div>
                     </div>

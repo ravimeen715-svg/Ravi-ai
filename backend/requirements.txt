@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+python-multipart
+moviepy==1.0.3
+opencv-python
+edge-tts
+elevenlabs
+google-api-python-client
+google-auth-oauthlib
+google-auth-httplib2
+requests

@@ -39,18 +39,31 @@ const GeminiAPI = {
 
                 if (!response.ok) {
                     const err = await response.json().catch(() => ({}));
+                    const errMsg = err.error?.message || `API error: ${response.status}`;
+
+                    // Root Cause Resolution: Deterministic 404 handling
+                    if (response.status === 404 && errMsg.includes('is not found')) {
+                        console.warn(`[JOHNSON AI - AUTO-RECOVERY] Model ${modelUrl} rejected. Falling back to legacy 'gemini-pro'`);
+                        // Set fallback globally
+                        const fallbackModel = 'gemini-pro';
+                        window.GeminiAPI.baseUrl = `https://generativelanguage.googleapis.com/v1beta/models/${fallbackModel}:generateContent`;
+                        localStorage.setItem('johnson_ai_working_model', fallbackModel);
+                        // Retry immediately with the correct endpoint
+                        continue;
+                    }
+
                     if (response.status === 429 || response.status === 503) {
                         if (attempt < maxRetries) {
                             console.warn(`[JOHNSON AI] Rate limit (429) hit on attempt ${attempt}. Waiting 15 seconds...`);
-                            await new Promise(r => setTimeout(r, 15000)); // wait 15 seconds before retry
-                            continue; // Retry loop
+                            await new Promise(r => setTimeout(r, 15000));
+                            continue;
                         }
-                        throw new Error('Google API quota exhausted. Try again after 30 minutes.');
+                        throw new Error('Google API quota exhausted. Try again later.');
                     }
                     if (response.status === 400) {
-                        throw new Error('Invalid API key. Check settings or ensure your key supports this model.');
+                        throw new Error(`Bad Request/Invalid Key. Message: ${errMsg}`);
                     }
-                    throw new Error(err.error?.message || `API error: ${response.status}`);
+                    throw new Error(errMsg);
                 }
 
                 const data = await response.json();

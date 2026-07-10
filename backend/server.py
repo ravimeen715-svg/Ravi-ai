@@ -81,17 +81,20 @@ async def generate_video(request: Request):
         
         current_time = 0
         for i, scene in enumerate(scenes_data):
-            # Fallback black screen if no image, or download image
+            # Download image or Generate AI Image dynamically using a free, keyless AI provider
             img_path = os.path.join(OUTPUT_DIR, f"scene_{i}.jpg")
             if scene.get("image_url") and scene["image_url"].startswith("http"):
                 img_data = requests.get(scene["image_url"]).content
                 with open(img_path, "wb") as f:
                     f.write(img_data)
             else:
-                # Create a black placeholder with OpenCV
-                import numpy as np
-                img = np.zeros((1920, 1080, 3), dtype=np.uint8)
-                cv2.imwrite(img_path, img)
+                # Provide a free fallback AI image generator instead of a black screen
+                prompt = scene.get("text", f"cinematic scene {i}")
+                encoded_prompt = requests.utils.quote(f"{prompt} vertical portrait high quality")
+                fallback_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1080&height=1920&nologo=true"
+                img_data = requests.get(fallback_url).content
+                with open(img_path, "wb") as f:
+                    f.write(img_data)
 
             duration = float(scene.get("duration", 3.0))
             
